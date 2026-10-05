@@ -4,7 +4,7 @@
 	"version": "${version}",
 	"name": "VillagerGacha",
 	"description": "Places and breaks a lectern automatically until a librarian offers the enchanted book you want.",
-	"authors": ["いるかぁぁ（Dolphin_kun）"],
+	"authors": ["いるかぁぁ（Dolphin-kun）"],
 	"license": "MIT",
 	"icon": "assets/villager_gacha/icon.png",
 	"environment": "client",

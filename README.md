@@ -4,7 +4,7 @@
 
 - 対応: Minecraft 26.3 / Fabric Loader 0.19.5 以上 / Fabric API
 - 任意: Mod Menu（一覧から設定画面を開けます）
-- 作者: いるかぁぁ（Dolphin_kun）
+- 作者: いるかぁぁ（Dolphin-kun）
 - ライセンス: MIT
 
 ## 使い方
