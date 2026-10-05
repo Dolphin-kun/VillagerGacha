@@ -36,7 +36,7 @@ public final class SettingsScreen extends Screen {
 	private static final int RED = 0xFFFF6B6B;
 
 	private enum Tab {
-		BASIC, DISPLAY, RESUME
+		BASIC, ACTION, DISPLAY
 	}
 
 	private record Label(Component text, int y, String tooltipKey) {
@@ -81,8 +81,8 @@ public final class SettingsScreen extends Screen {
 		ModConfig cfg = ModConfig.get();
 		int y = switch (this.tab) {
 			case BASIC -> this.basicTab(cfg, FIRST_ROW_Y);
+			case ACTION -> this.actionTab(cfg, FIRST_ROW_Y);
 			case DISPLAY -> this.displayTab(cfg, FIRST_ROW_Y);
-			case RESUME -> this.resumeTab(cfg, FIRST_ROW_Y);
 		};
 
 		this.addRenderableWidget(Button.builder(CommonComponents.GUI_DONE, b -> this.onClose())
@@ -115,14 +115,20 @@ public final class SettingsScreen extends Screen {
 		this.toggle(this.controlX, toggleW, y, () -> cfg.protectAxe, v -> cfg.protectAxe = v);
 		this.stepper(this.controlX + toggleW + BUTTON_GAP, CONTROL_W - toggleW - BUTTON_GAP, y,
 			() -> cfg.axeMinDurability, v -> cfg.axeMinDurability = v, 1, 200, 5, n -> Texts.tr("ui.axe_remaining", n));
-		y += ROW_H;
+		return y + ROW_H;
+	}
 
+	private int actionTab(ModConfig cfg, int y) {
+		this.label(y, "ui.remove_found");
+		this.toggle(this.controlX, CONTROL_W, y, () -> cfg.removeFoundTarget, v -> cfg.removeFoundTarget = v);
+		y += ROW_H;
 		this.label(y, "ui.hide_trade_screen");
 		this.toggle(this.controlX, CONTROL_W, y, () -> cfg.hideTradeScreen, v -> cfg.hideTradeScreen = v);
 		y += ROW_H;
 		this.label(y, "ui.face_targets");
 		this.toggle(this.controlX, CONTROL_W, y, () -> cfg.faceTargets, v -> cfg.faceTargets = v);
-		return y + ROW_H;
+		y += ROW_H;
+		return this.resumeRows(cfg, y);
 	}
 
 	private int displayTab(ModConfig cfg, int y) {
@@ -152,7 +158,7 @@ public final class SettingsScreen extends Screen {
 		return y + ROW_H;
 	}
 
-	private int resumeTab(ModConfig cfg, int y) {
+	private int resumeRows(ModConfig cfg, int y) {
 		this.label(y, "ui.auto_resume");
 		this.toggle(this.controlX, CONTROL_W, y, () -> cfg.autoResume, v -> cfg.autoResume = v);
 		y += ROW_H;

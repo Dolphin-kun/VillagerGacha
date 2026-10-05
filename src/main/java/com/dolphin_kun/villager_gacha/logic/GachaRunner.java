@@ -304,10 +304,14 @@ public final class GachaRunner {
 		Component found = match.get().offer().describe();
 		this.closeTrade(mc, player);
 		player.playSound(SoundEvents.PLAYER_LEVELUP, 1.0F, 1.0F);
-		cfg.targets.remove(match.get().target());
-		ModConfig.save();
 		this.phase = Phase.DONE;
 		this.status = Texts.tr("status.found", found);
+		if (!cfg.removeFoundTarget) {
+			Texts.announce(mc, Texts.tr("msg.found_kept", found, this.pulls));
+			return;
+		}
+		cfg.targets.remove(match.get().target());
+		ModConfig.save();
 		Texts.announce(mc, cfg.targets.isEmpty()
 			? Texts.tr("msg.found_last", found, this.pulls)
 			: Texts.tr("msg.found", found, this.pulls, cfg.targets.size()));

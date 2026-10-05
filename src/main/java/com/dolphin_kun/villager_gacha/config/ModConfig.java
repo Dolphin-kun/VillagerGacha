@@ -35,6 +35,8 @@ public final class ModConfig {
 
 	public boolean faceTargets = false;
 
+	public boolean removeFoundTarget = true;
+
 	public boolean protectAxe = true;
 	public int axeMinDurability = 10;
 
