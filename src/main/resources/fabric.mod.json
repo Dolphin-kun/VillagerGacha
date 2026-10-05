@@ -1,0 +1,25 @@
+{
+	"schemaVersion": 1,
+	"id": "villager_gacha",
+	"version": "${version}",
+	"name": "VillagerGacha",
+	"description": "Places and breaks a lectern automatically until a librarian offers the enchanted book you want.",
+	"authors": ["いるかぁぁ（Dolphin_kun）"],
+	"license": "MIT",
+	"icon": "assets/villager_gacha/icon.png",
+	"environment": "client",
+	"entrypoints": {
+		"client": ["com.dolphin_kun.villager_gacha.VillagerGacha"],
+		"modmenu": ["com.dolphin_kun.villager_gacha.ui.ModMenuEntry"]
+	},
+	"mixins": ["villager_gacha.mixins.json"],
+	"depends": {
+		"fabricloader": ">=0.19.5",
+		"minecraft": "~26.3",
+		"java": ">=25",
+		"fabric-api": "*"
+	},
+	"suggests": {
+		"modmenu": "*"
+	}
+}
