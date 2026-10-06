@@ -5,8 +5,6 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.component.SwingAnimation;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
 
@@ -19,10 +17,9 @@ public final class Clicks {
 			return false;
 		}
 		for (InteractionHand hand : InteractionHand.values()) {
-			SwingAnimation animation = player.getItemInHand(hand).getInteractAnimation();
 			if (mc.gameMode.interact(player, target, hit, hand) instanceof InteractionResult.Success success) {
-				if (success.swingSource() == InteractionResult.SwingSource.PREDICTED) {
-					player.swing(hand, animation, false);
+				if (success.swingSource() == InteractionResult.SwingSource.CLIENT) {
+					player.swing(hand);
 				}
 				return true;
 			}
@@ -34,11 +31,9 @@ public final class Clicks {
 		if (mc.gameMode == null) {
 			return false;
 		}
-		ItemStack held = player.getMainHandItem();
-		SwingAnimation animation = held.getInteractAnimation();
 		if (mc.gameMode.useItemOn(player, InteractionHand.MAIN_HAND, hit) instanceof InteractionResult.Success success) {
-			if (success.swingSource() == InteractionResult.SwingSource.PREDICTED) {
-				player.swing(InteractionHand.MAIN_HAND, animation, false);
+			if (success.swingSource() == InteractionResult.SwingSource.CLIENT) {
+				player.swing(InteractionHand.MAIN_HAND);
 			}
 			return true;
 		}
@@ -46,6 +41,6 @@ public final class Clicks {
 	}
 
 	public static void swingWhileMining(LocalPlayer player) {
-		player.swing(InteractionHand.MAIN_HAND, player.getMainHandItem().getAttackAnimation(), false);
+		player.swing(InteractionHand.MAIN_HAND);
 	}
 }

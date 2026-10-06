@@ -51,7 +51,7 @@ public final class VillagerGacha implements ClientModInitializer {
 
 	private static KeyMapping register(String name, int key, KeyMapping.Category category) {
 		return KeyMappingHelper.registerKeyMapping(
-			new KeyMapping("key." + MOD_ID + "." + name, InputConstants.Type.KEYBOARD, key, category)
+			new KeyMapping("key." + MOD_ID + "." + name, InputConstants.Type.KEYSYM, key, category)
 		);
 	}
 
