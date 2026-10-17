@@ -12,7 +12,11 @@ import java.util.function.IntConsumer;
 import java.util.function.IntFunction;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
+//? if >=26.1 {
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+//?} else {
+/*import net.minecraft.client.gui.GuiGraphics;
+*///?}
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
@@ -203,16 +207,31 @@ public final class SettingsScreen extends Screen {
 	}
 
 	private static Component onOff(boolean on) {
-		return on ? CommonComponents.OPTION_ON.copy().withColor(GREEN) : CommonComponents.OPTION_OFF.copy().withColor(RED);
+		return on ? CommonComponents.OPTION_ON.copy().withStyle(s -> s.withColor(GREEN)) : CommonComponents.OPTION_OFF.copy().withStyle(s -> s.withColor(RED));
 	}
 
 	private static Component secondsText(int ticks) {
 		return Texts.tr("ui.seconds", String.format(Locale.ROOT, "%.2f", ticks / 20.0).replaceAll("\\.?0+$", ""));
 	}
 
+	//? if >=26.1 {
 	@Override
 	public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
 		super.extractRenderState(graphics, mouseX, mouseY, delta);
+		drawContent(graphics, mouseX, mouseY);
+	}
+
+	private void drawContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
+	//?} else {
+	/*@Override
+	public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
+		super.render(graphics, mouseX, mouseY, delta);
+		drawContent(graphics, mouseX, mouseY);
+	}
+
+	private void drawContent(GuiGraphics graphics, int mouseX, int mouseY) {
+	*///?}
+		//? if >=26.1 {
 		graphics.text(this.font, this.title, (this.width - this.font.width(this.title)) / 2, 8, GOLD);
 
 		if (this.spotY >= 0) {
@@ -236,11 +255,36 @@ public final class SettingsScreen extends Screen {
 			Component text = value.text().get();
 			graphics.text(this.font, text, value.x() + (value.width() - this.font.width(text)) / 2, value.y() + 6, WHITE);
 		}
+		//?} else {
+		/*graphics.drawString(this.font, this.title, (this.width - this.font.width(this.title)) / 2, 8, GOLD);
+
+		if (this.spotY >= 0) {
+			ModConfig cfg = ModConfig.get();
+			Component spot = cfg.lectern == null
+				? Texts.tr("ui.spot.unset")
+				: Texts.tr("ui.spot.value", cfg.lectern.x, cfg.lectern.y, cfg.lectern.z);
+			Component spotLabel = Texts.tr("ui.spot");
+			graphics.drawString(this.font, spotLabel, this.left, this.spotY + 6, WHITE);
+			graphics.drawString(this.font, spot, this.left + this.font.width(spotLabel) + 8, this.spotY + 6, cfg.lectern == null ? RED : GRAY);
+		}
+
+		for (Label label : this.labels) {
+			graphics.drawString(this.font, label.text(), this.left, label.y() + 6, WHITE);
+			if (mouseX >= this.left && mouseX < this.controlX && mouseY >= label.y() && mouseY < label.y() + 20) {
+				graphics.renderTooltip(this.font, this.font.split(Texts.tr(label.tooltipKey()), 220), mouseX, mouseY);
+			}
+		}
+		for (Value value : this.values) {
+			value.refresh().run();
+			Component text = value.text().get();
+			graphics.drawString(this.font, text, value.x() + (value.width() - this.font.width(text)) / 2, value.y() + 6, WHITE);
+		}
+		*///?}
 	}
 
 	@Override
 	public void onClose() {
 		ModConfig.save();
-		this.minecraft.gui.setScreen(this.parent);
+		this.minecraft.setScreen(this.parent);
 	}
 }

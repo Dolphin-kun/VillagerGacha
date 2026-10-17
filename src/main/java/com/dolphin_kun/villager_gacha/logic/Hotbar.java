@@ -5,7 +5,11 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.entity.player.Inventory;
+//? if >=26.1 {
 import net.minecraft.world.inventory.ContainerInput;
+//?} else {
+/*import net.minecraft.world.inventory.ClickType;
+*///?}
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
@@ -31,7 +35,11 @@ public final class Hotbar {
 		if (slot < 0) {
 			return false;
 		}
+		//? if >=26.1 {
 		player.getInventory().setSelectedSlot(slot);
+		//?} else {
+		/*player.getInventory().selected = slot;
+		*///?}
 		return true;
 	}
 
@@ -82,7 +90,11 @@ public final class Hotbar {
 		if (to < 0) {
 			return false;
 		}
+		//? if >=26.1 {
 		mc.gameMode.handleContainerInput(player.inventoryMenu.containerId, from, to, ContainerInput.SWAP, player);
+		//?} else {
+		/*mc.gameMode.handleInventoryMouseClick(player.inventoryMenu.containerId, from, to, ClickType.SWAP, player);
+		*///?}
 		return find(player, stack -> stack.is(item)) >= 0;
 	}
 }

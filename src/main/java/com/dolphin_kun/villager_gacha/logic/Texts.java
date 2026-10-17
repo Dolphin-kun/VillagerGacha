@@ -24,7 +24,7 @@ public final class Texts {
 		if (mc.player == null) {
 			return;
 		}
-		mc.gui.hud.setOverlayMessage(tr("chat.prefix").append(message), false);
+		mc.gui.setOverlayMessage(tr("chat.prefix").append(message), false);
 		if (ModConfig.get().chatEverything) {
 			mc.player.sendSystemMessage(tr("chat.prefix").append(message));
 		}

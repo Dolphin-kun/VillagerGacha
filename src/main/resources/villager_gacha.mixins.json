@@ -1,9 +1,9 @@
 {
 	"required": true,
 	"package": "com.dolphin_kun.villager_gacha.mixin",
-	"compatibilityLevel": "JAVA_25",
+	"compatibilityLevel": "${mixin_java}",
 	"client": [
-		"GuiMixin",
+		"MinecraftMixin",
 		"ClientPacketListenerMixin"
 	],
 	"injectors": {

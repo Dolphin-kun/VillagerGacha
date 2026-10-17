@@ -8,9 +8,14 @@ import com.dolphin_kun.villager_gacha.ui.TargetScreen;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+//? if >=26.1 {
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
+//?} else {
+/*import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
+*///?}
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
@@ -32,13 +37,18 @@ public final class VillagerGacha implements ClientModInitializer {
 	public static KeyMapping openMenuKey;
 
 	public static Identifier id(String path) {
+		//? if >=1.21 {
 		return Identifier.fromNamespaceAndPath(MOD_ID, path);
+		//?} else {
+		/*return new Identifier(MOD_ID, path);
+		*///?}
 	}
 
 	@Override
 	public void onInitializeClient() {
 		ModConfig.load();
 
+		//? if >=26.1 {
 		KeyMapping.Category category = KeyMapping.Category.register(id("main"));
 		toggleKey = register("toggle", InputConstants.KEY_J, category);
 		emergencyKey = register("emergency_stop", InputConstants.KEY_K, category);
@@ -47,13 +57,31 @@ public final class VillagerGacha implements ClientModInitializer {
 
 		ClientTickEvents.END_CLIENT_TICK.register(VillagerGacha::onClientTick);
 		HudElementRegistry.attachElementBefore(VanillaHudElements.CHAT, id("status"), StatusHud::draw);
+		//?} else {
+		/*String category = "VillagerGacha";
+		toggleKey = register("toggle", InputConstants.KEY_J, category);
+		emergencyKey = register("emergency_stop", InputConstants.KEY_K, category);
+		setSpotKey = register("set_spot", InputConstants.KEY_R, category);
+		openMenuKey = register("open_menu", InputConstants.KEY_N, category);
+
+		ClientTickEvents.END_CLIENT_TICK.register(VillagerGacha::onClientTick);
+		HudRenderCallback.EVENT.register(StatusHud::draw);
+		*///?}
 	}
 
+	//? if >=26.1 {
 	private static KeyMapping register(String name, int key, KeyMapping.Category category) {
 		return KeyMappingHelper.registerKeyMapping(
-			new KeyMapping("key." + MOD_ID + "." + name, InputConstants.Type.KEYBOARD, key, category)
+			new KeyMapping("key." + MOD_ID + "." + name, key, category)
 		);
 	}
+	//?} else {
+	/*private static KeyMapping register(String name, int key, String category) {
+		return KeyBindingHelper.registerKeyBinding(
+			new KeyMapping("key." + MOD_ID + "." + name, key, category)
+		);
+	}
+	*///?}
 
 	private static void onClientTick(Minecraft mc) {
 		if (mc.player == null) {
@@ -69,7 +97,7 @@ public final class VillagerGacha implements ClientModInitializer {
 			setSpotFromCrosshair(mc);
 		}
 		while (openMenuKey.consumeClick()) {
-			mc.gui.setScreen(new TargetScreen(null));
+			mc.setScreen(new TargetScreen(null));
 		}
 		RUNNER.tick(mc);
 	}

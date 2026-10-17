@@ -8,13 +8,19 @@ import com.dolphin_kun.villager_gacha.logic.Texts;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+//? if >=1.21 {
 import net.minecraft.client.DeltaTracker;
+//?}
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+//? if >=26.1 {
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import org.joml.Matrix3x2fStack;
+//?} else {
+/*import net.minecraft.client.gui.GuiGraphics;
+*///?}
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
-import org.joml.Matrix3x2fStack;
 
 public final class StatusHud {
 	private static final int MARGIN = 4;
@@ -45,12 +51,18 @@ public final class StatusHud {
 	private StatusHud() {
 	}
 
+	//? if >=26.1 {
 	public static void draw(GuiGraphicsExtractor graphics, DeltaTracker delta) {
+	//?} elif >=1.21 {
+	/*public static void draw(GuiGraphics graphics, DeltaTracker delta) {
+	*///?} else {
+	/*public static void draw(GuiGraphics graphics, float delta) {
+	*///?}
 		Minecraft mc = Minecraft.getInstance();
 		ModConfig cfg = ModConfig.get();
 		GachaRunner runner = VillagerGacha.RUNNER;
 		GachaRunner.Phase phase = runner.phase();
-		if (!cfg.showHud || phase == GachaRunner.Phase.OFF || mc.gui.hud.isHidden()) {
+		if (!cfg.showHud || phase == GachaRunner.Phase.OFF || mc.options.hideGui) {
 			return;
 		}
 		boolean compact = phase.running() && phase != GachaRunner.Phase.NEED_LECTERN;
@@ -107,7 +119,11 @@ public final class StatusHud {
 		return new Panel(Texts.tr("hud.title"), lines, keys);
 	}
 
+	//? if >=26.1 {
 	private static void drawPanel(GuiGraphicsExtractor graphics, Font font, ModConfig cfg, Panel panel) {
+	//?} else {
+	/*private static void drawPanel(GuiGraphics graphics, Font font, ModConfig cfg, Panel panel) {
+	*///?}
 		int labelWidth = panel.lines().stream().mapToInt(l -> font.width(l.label())).max().orElse(0);
 		int valueWidth = panel.lines().stream().mapToInt(l -> font.width(l.value())).max().orElse(0);
 		int innerWidth = labelWidth + COLUMN_GAP + valueWidth;
@@ -123,7 +139,7 @@ public final class StatusHud {
 		int boxWidth = BORDER * 2 + PAD * 2 + innerWidth;
 		int boxHeight = BORDER * 2 + PAD * 2 + innerHeight;
 
-		int guiScale = Minecraft.getInstance().getWindow().getGuiScale();
+		int guiScale = (int) Minecraft.getInstance().getWindow().getGuiScale();
 		float scale = crispScale(cfg.hudScale, guiScale);
 		float scaledWidth = boxWidth * scale;
 		float scaledHeight = boxHeight * scale;
@@ -137,6 +153,7 @@ public final class StatusHud {
 		screenX = Math.round(screenX * guiScale) / (float) guiScale;
 		screenY = Math.round(screenY * guiScale) / (float) guiScale;
 
+		//? if >=26.1 {
 		Matrix3x2fStack pose = graphics.pose();
 		pose.pushMatrix();
 		pose.translate(screenX, screenY);
@@ -165,6 +182,36 @@ public final class StatusHud {
 			graphics.text(font, panel.footer(), x + (innerWidth - font.width(panel.footer())) / 2, y, MUTED);
 		}
 		pose.popMatrix();
+		//?} else {
+		/*var pose = graphics.pose();
+		pose.pushPose();
+		pose.translate(screenX, screenY, 0);
+		pose.scale(scale, scale, 1);
+
+		graphics.fill(BORDER, BORDER, boxWidth - BORDER, boxHeight - BORDER, BACKGROUND);
+		graphics.renderOutline(0, 0, boxWidth, boxHeight, FRAME);
+
+		int x = BORDER + PAD;
+		int y = BORDER + PAD;
+		if (panel.title() != null) {
+			graphics.drawString(font, panel.title(), x + (innerWidth - font.width(panel.title())) / 2, y, TITLE);
+			y += TEXT_H + SECTION_GAP;
+			graphics.fill(x, y, x + innerWidth, y + 1, DIVIDER);
+			y += 1 + SECTION_GAP;
+		}
+		for (Line line : panel.lines()) {
+			graphics.drawString(font, line.label(), x, y, LABEL);
+			graphics.drawString(font, line.value(), x + labelWidth + COLUMN_GAP, y, line.color());
+			y += LINE;
+		}
+		if (panel.footer() != null) {
+			y += SECTION_GAP - (LINE - TEXT_H);
+			graphics.fill(x, y, x + innerWidth, y + 1, DIVIDER);
+			y += 1 + SECTION_GAP;
+			graphics.drawString(font, panel.footer(), x + (innerWidth - font.width(panel.footer())) / 2, y, MUTED);
+		}
+		pose.popPose();
+		*///?}
 	}
 
 	public static float crispScale(int percent, int guiScale) {
@@ -195,7 +242,7 @@ public final class StatusHud {
 			return true;
 		}
 		Identifier id = Identifier.tryParse(target.enchantment);
-		return id != null && book.enchantment().is(id);
+		return id != null && id.equals(book.id());
 	}
 
 	public static Component conditionText(ModConfig.Target target) {

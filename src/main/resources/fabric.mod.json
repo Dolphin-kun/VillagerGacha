@@ -14,9 +14,9 @@
 	},
 	"mixins": ["villager_gacha.mixins.json"],
 	"depends": {
-		"fabricloader": ">=0.19.5",
-		"minecraft": "~26.3",
-		"java": ">=25",
+		"fabricloader": ">=${loader_version}",
+		"minecraft": "${mc_compat}",
+		"java": "${java_compat}",
 		"fabric-api": "*"
 	},
 	"suggests": {

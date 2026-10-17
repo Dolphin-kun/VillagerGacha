@@ -15,8 +15,13 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
+//? if >=26.1 {
 import net.minecraft.world.entity.npc.villager.Villager;
 import net.minecraft.world.entity.npc.villager.VillagerProfession;
+//?} else {
+/*import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.entity.npc.VillagerProfession;
+*///?}
 import net.minecraft.network.protocol.game.ServerboundContainerClosePacket;
 import net.minecraft.world.inventory.MerchantMenu;
 import net.minecraft.world.item.trading.MerchantOffers;
@@ -237,7 +242,11 @@ public final class GachaRunner {
 			return;
 		}
 		this.placeTries = 0;
+		//? if >=26.1 {
 		if (villager.getVillagerData().profession().is(VillagerProfession.LIBRARIAN)) {
+		//?} else {
+		/*if (villager.getVillagerData().getProfession() == VillagerProfession.LIBRARIAN) {
+		*///?}
 			this.status = Texts.tr("status.opening");
 			this.openTries = 0;
 			this.enter(Phase.OPENING, cfg.openDelayTicks);
@@ -251,7 +260,11 @@ public final class GachaRunner {
 			this.pause(mc, Texts.tr("error.villager_lost"), true);
 			return;
 		}
+		//? if >=26.1 {
 		if (villager.getVillagerData().profession().is(VillagerProfession.NONE)) {
+		//?} else {
+		/*if (villager.getVillagerData().getProfession() == VillagerProfession.NONE) {
+		*///?}
 			this.enter(Phase.COOLDOWN, ModConfig.get().placeDelayTicks);
 		} else if (this.phaseTicks > JOBLESS_TIMEOUT) {
 			this.pause(mc, Texts.tr("error.job_locked"), false);
@@ -293,7 +306,7 @@ public final class GachaRunner {
 		this.pulls++;
 		this.resumeStreak = 0;
 		this.lastBooks = books;
-		this.lastSeen = books.isEmpty() ? Texts.tr("book.none") : books.getLast().describe();
+		this.lastSeen = books.isEmpty() ? Texts.tr("book.none") : books.get(books.size() - 1).describe();
 
 		Optional<Books.Match> match = Books.findMatch(cfg.targets, books);
 		if (match.isEmpty()) {
@@ -381,7 +394,7 @@ public final class GachaRunner {
 	}
 
 	private static void closeHiddenTrade(Minecraft mc) {
-		if (mc.player != null && mc.player.containerMenu instanceof MerchantMenu && mc.gui.screen() == null) {
+		if (mc.player != null && mc.player.containerMenu instanceof MerchantMenu && mc.screen == null) {
 			mc.player.closeContainer();
 		}
 	}
@@ -401,26 +414,47 @@ public final class GachaRunner {
 		boolean lecternPlaced = level.getBlockState(spot).is(Blocks.LECTERN);
 		return level.getEntitiesOfClass(Villager.class, AABB.ofSize(center, size, size, size), v -> v.isAlive() && !v.isBaby()).stream()
 			.min(Comparator
+				//? if >=26.1 {
 				.comparing((Villager v) -> !player.isWithinEntityInteractionRange(v, 0))
+				//?} else {
+				/*.comparing((Villager v) -> !(player.distanceTo(v) <= 4.0))
+				*///?}
 				.thenComparing(v -> !isResettable(v, lecternPlaced))
 				.thenComparingDouble(v -> v.distanceToSqr(center)));
 	}
 
 	private static boolean isResettable(Villager villager, boolean lecternPlaced) {
+		//? if >=26.1 {
 		var profession = villager.getVillagerData().profession();
 		return profession.is(VillagerProfession.NONE) || (lecternPlaced && profession.is(VillagerProfession.LIBRARIAN));
+		//?} else {
+		/*VillagerProfession profession = villager.getVillagerData().getProfession();
+		return profession == VillagerProfession.NONE || (lecternPlaced && profession == VillagerProfession.LIBRARIAN);
+		*///?}
 	}
 
 	private void pauseNoTradeScreen(Minecraft mc, LocalPlayer player, ClientLevel level) {
 		Entity villager = level.getEntity(this.villagerId);
 		if (villager instanceof Villager v) {
+			//? if >=26.1 {
 			VillagerGacha.LOGGER.warn("Trade screen did not open: distance={} reachable={} profession={} sleeping={}",
 				String.format(java.util.Locale.ROOT, "%.2f", Math.sqrt(player.distanceToSqr(v))),
 				player.isWithinEntityInteractionRange(v, 0),
 				v.getVillagerData().profession().unwrapKey().map(k -> k.identifier().toString()).orElse("?"),
 				v.isSleeping());
+			//?} else {
+			/*VillagerGacha.LOGGER.warn("Trade screen did not open: distance={} reachable={} profession={} sleeping={}",
+				String.format(java.util.Locale.ROOT, "%.2f", Math.sqrt(player.distanceToSqr(v))),
+				player.distanceTo(v) <= 4.0,
+				String.valueOf(v.getVillagerData().getProfession()),
+				v.isSleeping());
+			*///?}
 		}
+		//? if >=26.1 {
 		boolean tooFar = villager != null && !player.isWithinEntityInteractionRange(villager, 0);
+		//?} else {
+		/*boolean tooFar = villager != null && !(player.distanceTo(villager) <= 4.0);
+		*///?}
 		this.pause(mc, Texts.tr(tooFar ? "error.no_trade_screen_far" : "error.no_trade_screen"), true);
 	}
 

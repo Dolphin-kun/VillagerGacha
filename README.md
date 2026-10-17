@@ -2,7 +2,10 @@
 
 司書が欲しいエンチャント本を出すまで、書見台の設置と破壊を自動で繰り返す Fabric Mod です（クライアント専用）。
 
-- 対応: Minecraft 26.3 / Fabric Loader 0.19.5 以上 / Fabric API
+- 対応: Minecraft 1.20.1 / 1.21.1 / 26.1（クライアント専用）
+  - 1.20.1: Fabric Loader 0.16.14 以上 / Fabric API / Java 17 以上
+  - 1.21.1: Fabric Loader 0.16.14 以上 / Fabric API / Java 21 以上
+  - 26.1: Fabric Loader 0.19.5 以上 / Fabric API / Java 25 以上
 - 任意: Mod Menu（一覧から設定画面を開けます）
 - 作者: いるかぁぁ（Dolphin-kun）
 - ライセンス: MIT

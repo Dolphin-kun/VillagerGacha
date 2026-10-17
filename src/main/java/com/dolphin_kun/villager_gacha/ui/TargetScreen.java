@@ -6,7 +6,11 @@ import com.dolphin_kun.villager_gacha.logic.Texts;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+//? if >=26.1 {
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+//?} else {
+/*import net.minecraft.client.gui.GuiGraphics;
+*///?}
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Tooltip;
@@ -48,9 +52,6 @@ public final class TargetScreen extends Screen {
 
 	private static final ItemStack BOOK_ICON = new ItemStack(Items.ENCHANTED_BOOK);
 
-	private record Candidate(String id, Component name) {
-	}
-
 	private final class Row {
 		final ModConfig.Target target;
 		final int cardX;
@@ -73,12 +74,12 @@ public final class TargetScreen extends Screen {
 		}
 
 		boolean recognized() {
-			return this.target.isAny() || Books.find(this.target.enchantment).isPresent();
+			return this.target.isAny() || Books.knows(this.target.enchantment);
 		}
 
 		void refreshLevel() {
 			this.maxLevel = Books.maxLevelOf(this.target.enchantment);
-			this.target.minLevel = Math.clamp(this.target.minLevel, 1, this.maxLevel);
+			this.target.minLevel = Math.min(this.maxLevel, Math.max(1, this.target.minLevel));
 			if (!this.target.isAny()) {
 				this.target.maxLevelOnly = false;
 			}
@@ -109,7 +110,7 @@ public final class TargetScreen extends Screen {
 		}
 
 		void refreshCheapest() {
-			this.cheapest.setMessage(Texts.tr("ui.cheapest").withColor(this.target.cheapestOnly ? GREEN : GRAY));
+			this.cheapest.setMessage(Texts.tr("ui.cheapest").withStyle(s -> s.withColor(this.target.cheapestOnly ? GREEN : GRAY)));
 			this.price.setEditable(!this.target.cheapestOnly);
 			this.price.active = !this.target.cheapestOnly;
 		}
@@ -118,7 +119,7 @@ public final class TargetScreen extends Screen {
 	private final Screen parent;
 	private final List<Row> rows = new ArrayList<>();
 	private final List<Button> suggestionButtons = new ArrayList<>();
-	private List<Candidate> candidates = List.of();
+	private List<Books.Candidate> candidates = List.of();
 	private Row suggestingFor;
 	private int scroll;
 	private int left;
@@ -142,15 +143,9 @@ public final class TargetScreen extends Screen {
 		this.suggestionButtons.clear();
 		this.suggestingFor = null;
 		this.left = Math.max(6, (this.width - CARD_W - GAP - SCROLLBAR_W - GAP - SUGGEST_W) / 2);
-		this.scroll = Math.clamp(this.scroll, 0, this.maxScroll());
+		this.scroll = Math.min(this.maxScroll(), Math.max(0, this.scroll));
 
-		List<Candidate> list = new ArrayList<>();
-		list.add(new Candidate(ModConfig.Target.ANY, Texts.tr("book.any")));
-		Books.allEnchantments()
-			.map(h -> new Candidate(h.key().identifier().toString(), h.value().description()))
-			.sorted((a, b) -> a.id().compareTo(b.id()))
-			.forEach(list::add);
-		this.candidates = list;
+		this.candidates = Books.candidates();
 
 		List<ModConfig.Target> targets = ModConfig.get().targets;
 		int end = Math.min(targets.size(), this.scroll + this.visibleCount());
@@ -168,7 +163,7 @@ public final class TargetScreen extends Screen {
 		addAny.setTooltip(Tooltip.create(Texts.tr("ui.add_any.tooltip")));
 		this.addRenderableWidget(addAny);
 		x += 124;
-		this.addRenderableWidget(Button.builder(Texts.tr("ui.settings"), b -> this.minecraft.gui.setScreen(new SettingsScreen(this)))
+		this.addRenderableWidget(Button.builder(Texts.tr("ui.settings"), b -> this.minecraft.setScreen(new SettingsScreen(this)))
 			.bounds(x, buttonY, 80, 20).build());
 		int doneX = Math.max(x + 84, this.left + CARD_W + GAP + SCROLLBAR_W + GAP + SUGGEST_W - 80);
 		this.addRenderableWidget(Button.builder(CommonComponents.GUI_DONE, b -> this.onClose())
@@ -195,7 +190,7 @@ public final class TargetScreen extends Screen {
 		row.price.setValue(String.valueOf(target.maxPrice));
 		row.price.setResponder(text -> {
 			try {
-				target.maxPrice = Math.clamp(Integer.parseInt(text.trim()), 1, 64);
+				target.maxPrice = Math.min(64, Math.max(1, Integer.parseInt(text.trim())));
 			} catch (NumberFormatException ignored) {
 			}
 		});
@@ -238,7 +233,7 @@ public final class TargetScreen extends Screen {
 		if (query.isEmpty() || this.candidates.stream().anyMatch(c -> c.id().equals(typed))) {
 			return;
 		}
-		List<Candidate> hits = this.candidates.stream()
+		List<Books.Candidate> hits = this.candidates.stream()
 			.filter(c -> c.id().replace("minecraft:", "").contains(query)
 				|| c.name().getString().toLowerCase(Locale.ROOT).contains(query))
 			.limit(MAX_SUGGESTIONS)
@@ -246,7 +241,7 @@ public final class TargetScreen extends Screen {
 
 		int x = this.suggestX();
 		int y = row.cardY;
-		for (Candidate c : hits) {
+		for (Books.Candidate c : hits) {
 			Button b = Button.builder(c.name(), btn -> {
 				row.name.setValue(c.id());
 				this.clearSuggestions();
@@ -281,24 +276,39 @@ public final class TargetScreen extends Screen {
 		this.init();
 	}
 
+	//? if >=1.21 {
 	@Override
 	public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+	//?} else {
+	/*@Override
+	public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
+		double scrollY = amount;
+	*///?}
 		boolean overList = mouseX >= this.left && mouseX < this.left + CARD_W + GAP + SCROLLBAR_W
 			&& mouseY >= LIST_TOP && mouseY < this.height - LIST_BOTTOM_MARGIN;
 		if (overList && this.maxScroll() > 0 && scrollY != 0) {
-			int next = Math.clamp(this.scroll - (int) Math.signum(scrollY), 0, this.maxScroll());
+			int next = Math.min(this.maxScroll(), Math.max(0, this.scroll - (int) Math.signum(scrollY)));
 			if (next != this.scroll) {
 				this.scroll = next;
 				this.rebuild();
 			}
 			return true;
 		}
+		//? if >=1.21 {
 		return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
+		//?} else {
+		/*return super.mouseScrolled(mouseX, mouseY, amount);
+		*///?}
 	}
 
+	//? if >=26.1 {
 	@Override
 	public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
 		super.extractBackground(graphics, mouseX, mouseY, delta);
+		drawCards(graphics);
+	}
+
+	private void drawCards(GuiGraphicsExtractor graphics) {
 		for (Row row : this.rows) {
 			int x2 = row.cardX + CARD_W;
 			int y2 = row.cardY + CARD_H;
@@ -306,10 +316,38 @@ public final class TargetScreen extends Screen {
 			graphics.outline(row.cardX, row.cardY, CARD_W, CARD_H, row.recognized() ? CARD_FRAME_OK : CARD_FRAME);
 		}
 	}
+	//?} elif >=1.21 {
+	/*@Override
+	public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
+		super.renderBackground(graphics, mouseX, mouseY, delta);
+		for (Row row : this.rows) {
+			int x2 = row.cardX + CARD_W;
+			int y2 = row.cardY + CARD_H;
+			graphics.fill(row.cardX + 1, row.cardY + 1, x2 - 1, y2 - 1, CARD_BG);
+			graphics.renderOutline(row.cardX, row.cardY, CARD_W, CARD_H, row.recognized() ? CARD_FRAME_OK : CARD_FRAME);
+		}
+	}
+	*///?} else {
+	/*@Override
+	public void renderBackground(GuiGraphics graphics) {
+		super.renderBackground(graphics);
+		for (Row row : this.rows) {
+			int x2 = row.cardX + CARD_W;
+			int y2 = row.cardY + CARD_H;
+			graphics.fill(row.cardX + 1, row.cardY + 1, x2 - 1, y2 - 1, CARD_BG);
+			graphics.renderOutline(row.cardX, row.cardY, CARD_W, CARD_H, row.recognized() ? CARD_FRAME_OK : CARD_FRAME);
+		}
+	}
+	*///?}
 
+	//? if >=26.1 {
 	@Override
 	public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
 		super.extractRenderState(graphics, mouseX, mouseY, delta);
+		drawContent(graphics);
+	}
+
+	private void drawContent(GuiGraphicsExtractor graphics) {
 		graphics.text(this.font, this.title, (this.width - this.font.width(this.title)) / 2, 10, GOLD);
 		Component hint = Texts.tr("ui.targets.hint");
 		graphics.text(this.font, hint, (this.width - this.font.width(hint)) / 2, 24, GRAY);
@@ -342,10 +380,51 @@ public final class TargetScreen extends Screen {
 			}
 		}
 
-		this.drawScrollbar(graphics);
+		drawScrollbar(graphics);
 	}
 
 	private void drawScrollbar(GuiGraphicsExtractor graphics) {
+	//?} else {
+	/*@Override
+	public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
+		super.render(graphics, mouseX, mouseY, delta);
+		graphics.drawString(this.font, this.title, (this.width - this.font.width(this.title)) / 2, 10, GOLD);
+		Component hint = Texts.tr("ui.targets.hint");
+		graphics.drawString(this.font, hint, (this.width - this.font.width(hint)) / 2, 24, GRAY);
+
+		List<ModConfig.Target> targets = ModConfig.get().targets;
+		if (targets.isEmpty()) {
+			Component empty = Texts.tr("ui.targets.empty");
+			graphics.drawString(this.font, empty, (this.width - this.font.width(empty)) / 2, LIST_TOP + 8, GRAY);
+			return;
+		}
+
+		int headerY = LIST_TOP - 12;
+		int x = this.left + CARD_PAD + ICON_W + GAP;
+		graphics.drawString(this.font, Texts.tr("ui.col.enchantment"), x, headerY, GRAY);
+		x += NAME_W + GAP;
+		graphics.drawString(this.font, Texts.tr("ui.col.level"), x, headerY, GRAY);
+		x += LEVEL_W + GAP;
+		graphics.drawString(this.font, Texts.tr("ui.col.price"), x, headerY, GRAY);
+		Component count = Texts.tr("ui.targets.count", targets.size());
+		graphics.drawString(this.font, count, this.left + CARD_W - this.font.width(count), headerY, GRAY);
+
+		for (Row row : this.rows) {
+			int y = row.contentY();
+			graphics.renderItem(BOOK_ICON, row.cardX + CARD_PAD, y + 2);
+			int levelX = row.cardX + CARD_PAD + ICON_W + GAP + NAME_W + GAP;
+			String level = row.levelText();
+			graphics.drawString(this.font, level, levelX + (LEVEL_W - this.font.width(level)) / 2, y + 6, WHITE);
+			if (row != this.suggestingFor && row.recognized()) {
+				graphics.drawString(this.font, Books.targetName(row.target), this.suggestX(), y + 6, GREEN);
+			}
+		}
+
+		drawScrollbar(graphics);
+	}
+
+	private void drawScrollbar(GuiGraphics graphics) {
+	*///?}
 		int total = ModConfig.get().targets.size();
 		int visible = this.visibleCount();
 		if (total <= visible) {
@@ -363,6 +442,6 @@ public final class TargetScreen extends Screen {
 	@Override
 	public void onClose() {
 		ModConfig.save();
-		this.minecraft.gui.setScreen(this.parent);
+		this.minecraft.setScreen(this.parent);
 	}
 }

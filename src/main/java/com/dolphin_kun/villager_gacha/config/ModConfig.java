@@ -82,7 +82,7 @@ public final class ModConfig {
 				t.enchantment = "";
 			}
 			t.minLevel = Math.max(1, t.minLevel);
-			t.maxPrice = Math.clamp(t.maxPrice, 1, 64);
+			t.maxPrice = Math.min(64, Math.max(1, t.maxPrice));
 		}
 		this.breakDelayTicks = Math.max(0, this.breakDelayTicks);
 		this.placeDelayTicks = Math.max(0, this.placeDelayTicks);
@@ -95,7 +95,7 @@ public final class ModConfig {
 		if (!java.util.Arrays.stream(HUD_SCALES).anyMatch(v -> v == this.hudScale)) {
 			this.hudScale = 75;
 		}
-		this.axeMinDurability = Math.clamp(this.axeMinDurability, 1, 200);
+		this.axeMinDurability = Math.min(200, Math.max(1, this.axeMinDurability));
 	}
 
 	public static final int[] HUD_SCALES = {50, 67, 75, 100};
